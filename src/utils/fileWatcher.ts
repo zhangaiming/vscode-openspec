@@ -9,6 +9,9 @@ export class FileWatcher implements vscode.Disposable {
   readonly onChangesChanged = this._onChangesChanged.event;
   readonly onSpecsChanged = this._onSpecsChanged.event;
 
+  private _onConfigChanged = new vscode.EventEmitter<void>();
+  readonly onConfigChanged = this._onConfigChanged.event;
+
   constructor() {
     // Watch changes directory
     const changesWatcher = vscode.workspace.createFileSystemWatcher(
@@ -27,6 +30,14 @@ export class FileWatcher implements vscode.Disposable {
     specsWatcher.onDidChange(() => this.fireSpecs());
     specsWatcher.onDidDelete(() => this.fireSpecs());
     this._watchers.push(specsWatcher);
+
+    // Watch config.yaml for init/delete detection
+    const configWatcher = vscode.workspace.createFileSystemWatcher(
+      '**/openspec/config.yaml',
+    );
+    configWatcher.onDidCreate(() => this.fireConfig());
+    configWatcher.onDidDelete(() => this.fireConfig());
+    this._watchers.push(configWatcher);
   }
 
   private fireChanges(): void {
@@ -35,6 +46,10 @@ export class FileWatcher implements vscode.Disposable {
 
   private fireSpecs(): void {
     this.debounce(() => this._onSpecsChanged.fire());
+  }
+
+  private fireConfig(): void {
+    this.debounce(() => this._onConfigChanged.fire());
   }
 
   private debounce(fn: () => void): void {
@@ -50,6 +65,7 @@ export class FileWatcher implements vscode.Disposable {
     }
     this._onChangesChanged.dispose();
     this._onSpecsChanged.dispose();
+    this._onConfigChanged.dispose();
     if (this._debounceTimer) {
       clearTimeout(this._debounceTimer);
     }

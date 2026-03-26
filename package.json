@@ -15,7 +15,8 @@
     "workspaceContains:openspec/config.yaml",
     "onView:openspec-changes",
     "onView:openspec-archived",
-    "onView:openspec-specs"
+    "onView:openspec-specs",
+    "onStartupFinished"
   ],
   "main": "./out/extension.js",
   "contributes": {
@@ -46,6 +47,12 @@
       ]
     },
     "commands": [
+      {
+        "command": "openspec.initOpenspec",
+        "title": "Initialize OpenSpec Environment",
+        "icon": "$(add)",
+        "category": "OpenSpec"
+      },
       {
         "command": "openspec.refreshChanges",
         "title": "Refresh Changes",
@@ -266,7 +273,24 @@
           "group": "3_copy@0"
         }
       ]
-    }
+    },
+    "viewsWelcome": [
+      {
+        "view": "openspec-changes",
+        "contents": "No OpenSpec environment detected in this workspace.\n[Initialize OpenSpec](command:openspec.initOpenspec)\nSetup openspec/ directory structure and configure AI tool skills (supports 20+ tools including GitHub Copilot, Claude, Cursor, etc.)\n[Learn more about OpenSpec](https://github.com/Fission-AI/OpenSpec)",
+        "when": "!openspec:initialized"
+      },
+      {
+        "view": "openspec-archived",
+        "contents": "No OpenSpec environment detected.\n[Initialize OpenSpec](command:openspec.initOpenspec)",
+        "when": "!openspec:initialized"
+      },
+      {
+        "view": "openspec-specs",
+        "contents": "No OpenSpec environment detected.\n[Initialize OpenSpec](command:openspec.initOpenspec)",
+        "when": "!openspec:initialized"
+      }
+    ]
   },
   "configuration": {
     "title": "OpenSpec Explorer",

@@ -1,8 +1,9 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
+import * as path from 'path';
 import { SpecInfo, RequirementInfo } from '../models/spec';
 import { listSpecs, parseSpec } from '../parsers/specParser';
-import { findOpenspecRoots } from '../parsers/changeParser';
+import { findOpenspecRoots, listChanges } from '../parsers/changeParser';
 
 // ── Tree item types ──
 
@@ -21,10 +22,23 @@ class SpecDateGroupItem extends vscode.TreeItem {
 }
 
 class CapabilityItem extends vscode.TreeItem {
-  constructor(public readonly spec: SpecInfo) {
+  constructor(
+    public readonly spec: SpecInfo,
+    changeNames: string[] = [],
+  ) {
     super(spec.capability, vscode.TreeItemCollapsibleState.Collapsed);
-    this.iconPath = new vscode.ThemeIcon('symbol-file');
-    this.tooltip = spec.path;
+    const count = changeNames.length;
+    this.iconPath = new vscode.ThemeIcon('symbol-file', getHeatColor(count));
+    if (count > 0) {
+      this.description = `△ ${count}`;
+      this.tooltip = new vscode.MarkdownString(
+        `**${spec.capability}**\n\n` +
+        `${count} active change(s):\n` +
+        changeNames.map(n => `- \`${n}\``).join('\n'),
+      );
+    } else {
+      this.tooltip = spec.path;
+    }
     this.command = {
       command: 'openspec.openFile',
       title: 'Open Spec',
@@ -38,14 +52,28 @@ class RequirementItem extends vscode.TreeItem {
   constructor(
     public readonly req: RequirementInfo,
     public readonly specPath: string,
+    changeNames: string[] = [],
   ) {
     super(req.name, req.scenarios.length > 0
       ? vscode.TreeItemCollapsibleState.Collapsed
       : vscode.TreeItemCollapsibleState.None);
-    this.iconPath = new vscode.ThemeIcon('checklist');
-    this.description = req.scenarios.length > 0
-      ? `${req.scenarios.length} scenarios`
-      : '';
+    const count = changeNames.length;
+    this.iconPath = new vscode.ThemeIcon('checklist', getHeatColor(count));
+    const parts: string[] = [];
+    if (count > 0) {
+      parts.push(`△ ${count}`);
+    }
+    if (req.scenarios.length > 0) {
+      parts.push(`${req.scenarios.length} scenarios`);
+    }
+    this.description = parts.join(' · ');
+    if (count > 0) {
+      this.tooltip = new vscode.MarkdownString(
+        `**${req.name}**\n\n` +
+        `${count} active change(s):\n` +
+        changeNames.map(n => `- \`${n}\``).join('\n'),
+      );
+    }
     this.command = {
       command: 'openspec.openFile',
       title: 'Open Requirement',
@@ -72,6 +100,15 @@ class ScenarioItem extends vscode.TreeItem {
   }
 }
 
+// ── Heat color based on change count ──
+
+function getHeatColor(count: number): vscode.ThemeColor | undefined {
+  if (count <= 0) { return undefined; }
+  if (count === 1) { return new vscode.ThemeColor('charts.yellow'); }
+  if (count === 2) { return new vscode.ThemeColor('charts.orange'); }
+  return new vscode.ThemeColor('charts.red');
+}
+
 // ── Tree Data Provider ──
 
 export class SpecsTreeProvider implements vscode.TreeDataProvider<SpecTreeItem> {
@@ -81,6 +118,9 @@ export class SpecsTreeProvider implements vscode.TreeDataProvider<SpecTreeItem> 
   private _workspaceFolders: string[] = [];
   private _parsedSpecs = new Map<string, RequirementInfo[]>();
   private _groupByDate = false;
+  private _coverageMap = new Map<string, string[]>();
+  private _reqCoverageMap = new Map<string, string[]>();
+  private _coverageBuilt = false;
 
   constructor() {
     this.updateWorkspaceFolders();
@@ -93,12 +133,42 @@ export class SpecsTreeProvider implements vscode.TreeDataProvider<SpecTreeItem> 
 
   refresh(): void {
     this._parsedSpecs.clear();
+    this._coverageMap.clear();
+    this._reqCoverageMap.clear();
+    this._coverageBuilt = false;
     this._onDidChangeTreeData.fire();
   }
 
   updateWorkspaceFolders(): void {
     this._workspaceFolders = (vscode.workspace.workspaceFolders ?? [])
       .map(f => f.uri.fsPath);
+  }
+
+  private buildCoverageMap(openspecRoot: string): void {
+    if (this._coverageBuilt) { return; }
+    this._coverageBuilt = true;
+    const changes = listChanges(openspecRoot);
+    for (const change of changes) {
+      for (const cap of change.artifacts.specs) {
+        let capList = this._coverageMap.get(cap);
+        if (!capList) {
+          capList = [];
+          this._coverageMap.set(cap, capList);
+        }
+        capList.push(change.name);
+        const deltaPath = path.join(change.path, 'specs', cap, 'spec.md');
+        const reqs = parseSpec(deltaPath);
+        for (const req of reqs) {
+          const key = `${cap}/${req.name}`;
+          let reqList = this._reqCoverageMap.get(key);
+          if (!reqList) {
+            reqList = [];
+            this._reqCoverageMap.set(key, reqList);
+          }
+          reqList.push(change.name);
+        }
+      }
+    }
   }
 
   getTreeItem(element: SpecTreeItem): vscode.TreeItem {
@@ -111,7 +181,7 @@ export class SpecsTreeProvider implements vscode.TreeDataProvider<SpecTreeItem> 
     }
 
     if (element instanceof SpecDateGroupItem) {
-      return element.specs.map(s => new CapabilityItem(s));
+      return element.specs.map(s => new CapabilityItem(s, this._coverageMap.get(s.capability) ?? []));
     }
 
     if (element instanceof CapabilityItem) {
@@ -132,6 +202,7 @@ export class SpecsTreeProvider implements vscode.TreeDataProvider<SpecTreeItem> 
     }
 
     const root = roots[0];
+    this.buildCoverageMap(root);
     const specs = listSpecs(root);
 
     if (this._groupByDate) {
@@ -154,7 +225,7 @@ export class SpecsTreeProvider implements vscode.TreeDataProvider<SpecTreeItem> 
         .map(([date, items]) => new SpecDateGroupItem(date, items));
     }
 
-    return specs.map(s => new CapabilityItem(s));
+    return specs.map(s => new CapabilityItem(s, this._coverageMap.get(s.capability) ?? []));
   }
 
   private getCapabilityChildren(item: CapabilityItem): SpecTreeItem[] {
@@ -163,7 +234,10 @@ export class SpecsTreeProvider implements vscode.TreeDataProvider<SpecTreeItem> 
       reqs = parseSpec(item.spec.path);
       this._parsedSpecs.set(item.spec.path, reqs);
     }
-    return reqs.map(r => new RequirementItem(r, item.spec.path));
+    return reqs.map(r => {
+      const key = `${item.spec.capability}/${r.name}`;
+      return new RequirementItem(r, item.spec.path, this._reqCoverageMap.get(key) ?? []);
+    });
   }
 
   private getRequirementChildren(item: RequirementItem): SpecTreeItem[] {

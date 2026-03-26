@@ -9,8 +9,17 @@ import { syncSpecs } from './commands/syncSpecs';
 import { syncArchiveCommit } from './commands/syncArchiveCommit';
 import { summarizeChange, summarizeSpec } from './commands/summarize';
 import { updateTasksProgress } from './commands/updateTasksProgress';
+import { initOpenspec } from './commands/initOpenspec';
+import { findOpenspecRoots } from './parsers/changeParser';
+
+function setInitializedContext(): void {
+  const folders = (vscode.workspace.workspaceFolders ?? []).map(f => f.uri.fsPath);
+  const initialized = findOpenspecRoots(folders).length > 0;
+  vscode.commands.executeCommand('setContext', 'openspec:initialized', initialized);
+}
 
 export function activate(context: vscode.ExtensionContext): void {
+  setInitializedContext();
   // Tree providers
   const activeChangesProvider = new ActiveChangesTreeProvider();
   const archivedChangesProvider = new ArchivedChangesTreeProvider();
@@ -30,10 +39,18 @@ export function activate(context: vscode.ExtensionContext): void {
   // File watcher for auto-refresh
   const watcher = new FileWatcher();
   watcher.onChangesChanged(() => {
+    setInitializedContext();
     activeChangesProvider.refresh();
     archivedChangesProvider.refresh();
+    specsProvider.refresh();
   });
   watcher.onSpecsChanged(() => specsProvider.refresh());
+  watcher.onConfigChanged(() => {
+    setInitializedContext();
+    activeChangesProvider.refresh();
+    archivedChangesProvider.refresh();
+    specsProvider.refresh();
+  });
   context.subscriptions.push(watcher);
 
   // Handle workspace folder changes
@@ -42,6 +59,7 @@ export function activate(context: vscode.ExtensionContext): void {
       activeChangesProvider.updateWorkspaceFolders();
       archivedChangesProvider.updateWorkspaceFolders();
       specsProvider.updateWorkspaceFolders();
+      setInitializedContext();
       activeChangesProvider.refresh();
       archivedChangesProvider.refresh();
       specsProvider.refresh();
@@ -50,6 +68,16 @@ export function activate(context: vscode.ExtensionContext): void {
 
   // Commands
   context.subscriptions.push(
+    vscode.commands.registerCommand('openspec.initOpenspec', async () => {
+      await initOpenspec();
+      setInitializedContext();
+      activeChangesProvider.updateWorkspaceFolders();
+      archivedChangesProvider.updateWorkspaceFolders();
+      specsProvider.updateWorkspaceFolders();
+      activeChangesProvider.refresh();
+      archivedChangesProvider.refresh();
+      specsProvider.refresh();
+    }),
     vscode.commands.registerCommand('openspec.refreshChanges', () => {
       activeChangesProvider.refresh();
     }),
