@@ -1,0 +1,334 @@
+{
+  "name": "vscode-openspec",
+  "displayName": "OpenSpec Explorer",
+  "description": "Browse and manage OpenSpec changes and specs from the VS Code sidebar.",
+  "version": "0.1.0",
+  "publisher": "local",
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "workspaceContains:openspec/config.yaml",
+    "onView:openspec-changes",
+    "onView:openspec-archived",
+    "onView:openspec-specs"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "openspec-sidebar",
+          "title": "OpenSpec",
+          "icon": "resources/icons/openspec.svg"
+        }
+      ]
+    },
+    "views": {
+      "openspec-sidebar": [
+        {
+          "id": "openspec-changes",
+          "name": "Active Changes"
+        },
+        {
+          "id": "openspec-archived",
+          "name": "Archived Changes",
+          "visibility": "collapsed"
+        },
+        {
+          "id": "openspec-specs",
+          "name": "Specs"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "openspec.refreshChanges",
+        "title": "Refresh Changes",
+        "icon": "$(refresh)",
+        "category": "OpenSpec"
+      },
+      {
+        "command": "openspec.refreshArchived",
+        "title": "Refresh Archived",
+        "icon": "$(refresh)",
+        "category": "OpenSpec"
+      },
+      {
+        "command": "openspec.refreshSpecs",
+        "title": "Refresh Specs",
+        "icon": "$(refresh)",
+        "category": "OpenSpec"
+      },
+      {
+        "command": "openspec.openFile",
+        "title": "Open File",
+        "category": "OpenSpec"
+      },
+      {
+        "command": "openspec.applyChange",
+        "title": "Apply Change",
+        "icon": "$(play)",
+        "category": "OpenSpec"
+      },
+      {
+        "command": "openspec.archiveChange",
+        "title": "Archive Change",
+        "icon": "$(archive)",
+        "category": "OpenSpec"
+      },
+      {
+        "command": "openspec.bulkArchive",
+        "title": "Bulk Archive Changes",
+        "icon": "$(archive)",
+        "category": "OpenSpec"
+      },
+      {
+        "command": "openspec.syncSpecs",
+        "title": "Sync Delta Specs",
+        "icon": "$(sync)",
+        "category": "OpenSpec"
+      },
+      {
+        "command": "openspec.syncArchiveCommit",
+        "title": "Sync & Archive & Commit",
+        "icon": "$(rocket)",
+        "category": "OpenSpec"
+      },
+      {
+        "command": "openspec.summarizeChange",
+        "title": "Summarize Change",
+        "icon": "$(comment)",
+        "category": "OpenSpec"
+      },
+      {
+        "command": "openspec.summarizeSpec",
+        "title": "Summarize Spec",
+        "icon": "$(comment)",
+        "category": "OpenSpec"
+      },
+      {
+        "command": "openspec.updateTasksProgress",
+        "title": "Update Tasks Progress",
+        "icon": "$(checklist)",
+        "category": "OpenSpec"
+      },
+      {
+        "command": "openspec.copyChangeName",
+        "title": "Copy Name",
+        "icon": "$(copy)",
+        "category": "OpenSpec"
+      },
+      {
+        "command": "openspec.collapseAll",
+        "title": "Collapse All",
+        "icon": "$(collapse-all)",
+        "category": "OpenSpec"
+      },
+      {
+        "command": "openspec.changesGroupByDate",
+        "title": "Group by Date",
+        "icon": "$(group-by-ref-type)",
+        "category": "OpenSpec"
+      },
+      {
+        "command": "openspec.changesFlatView",
+        "title": "Flat View",
+        "icon": "$(list-flat)",
+        "category": "OpenSpec"
+      },
+      {
+        "command": "openspec.archivedGroupByDate",
+        "title": "Group by Date",
+        "icon": "$(group-by-ref-type)",
+        "category": "OpenSpec"
+      },
+      {
+        "command": "openspec.archivedFlatView",
+        "title": "Flat View",
+        "icon": "$(list-flat)",
+        "category": "OpenSpec"
+      },
+      {
+        "command": "openspec.specsGroupByDate",
+        "title": "Group by Date",
+        "icon": "$(group-by-ref-type)",
+        "category": "OpenSpec"
+      },
+      {
+        "command": "openspec.specsFlatView",
+        "title": "Flat View",
+        "icon": "$(list-flat)",
+        "category": "OpenSpec"
+      }
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "openspec.refreshChanges",
+          "when": "view == openspec-changes",
+          "group": "navigation"
+        },
+        {
+          "command": "openspec.changesGroupByDate",
+          "when": "view == openspec-changes && !openspec:changesGroupByDate",
+          "group": "navigation"
+        },
+        {
+          "command": "openspec.changesFlatView",
+          "when": "view == openspec-changes && openspec:changesGroupByDate",
+          "group": "navigation"
+        },
+        {
+          "command": "openspec.bulkArchive",
+          "when": "view == openspec-changes",
+          "group": "navigation"
+        },
+        {
+          "command": "openspec.refreshArchived",
+          "when": "view == openspec-archived",
+          "group": "navigation"
+        },
+        {
+          "command": "openspec.archivedGroupByDate",
+          "when": "view == openspec-archived && !openspec:archivedGroupByDate",
+          "group": "navigation"
+        },
+        {
+          "command": "openspec.archivedFlatView",
+          "when": "view == openspec-archived && openspec:archivedGroupByDate",
+          "group": "navigation"
+        },
+        {
+          "command": "openspec.refreshSpecs",
+          "when": "view == openspec-specs",
+          "group": "navigation"
+        },
+        {
+          "command": "openspec.specsGroupByDate",
+          "when": "view == openspec-specs && !openspec:specsGroupByDate",
+          "group": "navigation"
+        },
+        {
+          "command": "openspec.specsFlatView",
+          "when": "view == openspec-specs && openspec:specsGroupByDate",
+          "group": "navigation"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "openspec.applyChange",
+          "when": "view == openspec-changes && viewItem == activeChange",
+          "group": "inline"
+        },
+        {
+          "command": "openspec.archiveChange",
+          "when": "view == openspec-changes && viewItem == activeChange",
+          "group": "1_actions@1"
+        },
+        {
+          "command": "openspec.syncSpecs",
+          "when": "view == openspec-changes && viewItem == activeChange",
+          "group": "1_actions@2"
+        },
+        {
+          "command": "openspec.applyChange",
+          "when": "view == openspec-changes && viewItem == activeChange",
+          "group": "1_actions@0"
+        },
+        {
+          "command": "openspec.updateTasksProgress",
+          "when": "view == openspec-changes && viewItem == activeChange",
+          "group": "1_actions@3"
+        },
+        {
+          "command": "openspec.syncArchiveCommit",
+          "when": "view == openspec-changes && viewItem == activeChange",
+          "group": "1_actions@4"
+        },
+        {
+          "command": "openspec.summarizeChange",
+          "when": "(view == openspec-changes || view == openspec-archived) && (viewItem == activeChange || viewItem == archivedChange)",
+          "group": "2_info@0"
+        },
+        {
+          "command": "openspec.summarizeSpec",
+          "when": "view == openspec-specs && viewItem == capability",
+          "group": "2_info@0"
+        },
+        {
+          "command": "openspec.copyChangeName",
+          "when": "(view == openspec-changes || view == openspec-archived) && (viewItem == activeChange || viewItem == archivedChange)",
+          "group": "3_copy@0"
+        }
+      ]
+    }
+  },
+  "configuration": {
+    "title": "OpenSpec Explorer",
+    "properties": {
+      "openspec.prompts.apply": {
+        "type": "string",
+        "default": "Implement the OpenSpec change \"${changeName}\".",
+        "markdownDescription": "Apply 操作的提示词模板。可用变量：`${changeName}`"
+      },
+      "openspec.prompts.archive": {
+        "type": "string",
+        "default": "Archive the OpenSpec change \"${changeName}\".",
+        "markdownDescription": "Archive 操作的提示词模板。可用变量：`${changeName}`"
+      },
+      "openspec.prompts.bulkArchive": {
+        "type": "string",
+        "default": "Bulk archive these OpenSpec changes: ${changeNames}.",
+        "markdownDescription": "Bulk Archive 操作的提示词模板。可用变量：`${changeNames}`（逗号分隔的名称列表）"
+      },
+      "openspec.prompts.syncSpecs": {
+        "type": "string",
+        "default": "Sync delta specs from the OpenSpec change \"${changeName}\" to main specs.",
+        "markdownDescription": "Sync Specs 操作的提示词模板。可用变量：`${changeName}`"
+      },
+      "openspec.prompts.summarizeChange": {
+        "type": "string",
+        "default": "请总结 OpenSpec change \"${changeName}\" 的内容。阅读 ${changePath} 下的 proposal.md、design.md、specs/、tasks.md，用中文给出简明摘要，包括：变更目标、设计方案要点、涉及的 spec 能力、任务完成情况。",
+        "markdownDescription": "Summarize Change 操作的提示词模板。可用变量：`${changeName}`, `${changePath}`"
+      },
+      "openspec.prompts.updateTasksProgress": {
+        "type": "string",
+        "default": "检查 OpenSpec change \"${changeName}\" 中 tasks 的实际完成情况，并更新 tasks 清单。阅读 ${changePath}/tasks.md，对照代码实现检查每个 task 是否已完成，更新 checkbox 状态。",
+        "markdownDescription": "Update Tasks Progress 操作的提示词模板。可用变量：`${changeName}`, `${changePath}`"
+      },
+      "openspec.prompts.syncArchiveCommit": {
+        "type": "string",
+        "default": "Sync delta specs, archive the change, and commit for OpenSpec change \"${changeName}\".",
+        "markdownDescription": "Sync & Archive & Commit 操作的提示词模板。可用变量：`${changeName}`"
+      },
+      "openspec.prompts.summarizeSpec": {
+        "type": "string",
+        "default": "请总结 OpenSpec spec \"${capability}\" 的内容。阅读 ${specPath}，用中文给出简明摘要，包括：该能力的职责定义、关键需求列表、重要场景覆盖。",
+        "markdownDescription": "Summarize Spec 操作的提示词模板。可用变量：`${capability}`, `${specPath}`"
+      }
+    }
+  },
+  "scripts": {
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "lint": "eslint src --ext ts",
+    "package": "npm run compile && vsce package",
+    "deploy": "npm run compile && npx @vscode/vsce package --allow-missing-repository && code --install-extension vscode-openspec-0.1.0.vsix --force",
+    "vscode:prepublish": "npm run compile"
+  },
+  "devDependencies": {
+    "@types/js-yaml": "^4.0.9",
+    "@types/node": "^20.11.0",
+    "@types/vscode": "^1.85.0",
+    "@vscode/vsce": "^2.22.0",
+    "typescript": "^5.3.0"
+  },
+  "dependencies": {
+    "js-yaml": "^4.1.0"
+  }
+}
