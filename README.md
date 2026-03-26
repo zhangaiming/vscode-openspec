@@ -1,8 +1,7 @@
 # OpenSpec Explorer
 
-[![GitHub Downloads](https://img.shields.io/github/downloads/zhangaiming/vscode-openspec/total)](https://github.com/zhangaiming/vscode-openspec/releases)
-
-[中文文档](README.zh-CN.md)
+[![Download](https://img.shields.io/badge/vsix%20size-181%20KB-blue)](https://github.com/zhangaiming/vscode-openspec/releases)
+[![中文文档](https://img.shields.io/badge/lang-中文文档-red)](README.zh-CN.md)
 
 A VS Code sidebar extension for browsing and managing [OpenSpec](https://github.com/Fission-AI/OpenSpec) changes and specs in your workspace.
 

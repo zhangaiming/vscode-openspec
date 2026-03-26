@@ -1,8 +1,7 @@
 # OpenSpec Explorer
 
-[![GitHub Downloads](https://img.shields.io/github/downloads/zhangaiming/vscode-openspec/total)](https://github.com/zhangaiming/vscode-openspec/releases)
-
-[English](README.md)
+[![Download](https://img.shields.io/badge/vsix%20size-181%20KB-blue)](https://github.com/zhangaiming/vscode-openspec/releases)
+[![English](https://img.shields.io/badge/lang-English-blue)](README.md)
 
 VS Code 侧边栏扩展，用于浏览和管理工作区中的 [OpenSpec](https://github.com/Fission-AI/OpenSpec) changes 和 specs。
 
