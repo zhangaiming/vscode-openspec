@@ -60,6 +60,18 @@
         "category": "OpenSpec"
       },
       {
+        "command": "openspec.searchActiveChanges",
+        "title": "Search Active Changes",
+        "icon": "$(search)",
+        "category": "OpenSpec"
+      },
+      {
+        "command": "openspec.clearActiveChangesSearch",
+        "title": "Clear Active Changes Search",
+        "icon": "$(close)",
+        "category": "OpenSpec"
+      },
+      {
         "command": "openspec.refreshArchived",
         "title": "Refresh Archived",
         "icon": "$(refresh)",
@@ -181,6 +193,11 @@
           "group": "navigation"
         },
         {
+          "command": "openspec.searchActiveChanges",
+          "when": "view == openspec-changes",
+          "group": "navigation"
+        },
+        {
           "command": "openspec.changesGroupByDate",
           "when": "view == openspec-changes && !openspec:changesGroupByDate",
           "group": "navigation"
@@ -227,6 +244,11 @@
         }
       ],
       "view/item/context": [
+        {
+          "command": "openspec.clearActiveChangesSearch",
+          "when": "view == openspec-changes && viewItem == activeChangeFilter",
+          "group": "inline"
+        },
         {
           "command": "openspec.applyChange",
           "when": "view == openspec-changes && viewItem == activeChange",

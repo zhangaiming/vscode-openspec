@@ -7,7 +7,20 @@ import { findOpenspecRoots } from '../parsers/changeParser';
 
 // ── Tree item types ──
 
-type ChangeTreeItem = ChangeItem | ArtifactItem | SpecsFolderItem | DeltaSpecItem | DateGroupItem;
+type ChangeTreeItem = ActiveFilterItem | ChangeItem | ArtifactItem | SpecsFolderItem | DeltaSpecItem | DateGroupItem;
+
+class ActiveFilterItem extends vscode.TreeItem {
+  constructor(public readonly query: string) {
+    super(`Filter: ${query}`, vscode.TreeItemCollapsibleState.None);
+    this.iconPath = new vscode.ThemeIcon('filter');
+    this.contextValue = 'activeChangeFilter';
+    this.tooltip = 'Active Changes filter. Click to edit, or use the inline action to clear.';
+    this.command = {
+      command: 'openspec.searchActiveChanges',
+      title: 'Edit Search Filter',
+    };
+  }
+}
 
 class ChangeItem extends vscode.TreeItem {
   constructor(public readonly change: ChangeInfo) {
@@ -138,6 +151,18 @@ function groupChangesByDate(changes: ChangeInfo[]): DateGroupItem[] {
     .map(([date, items]) => new DateGroupItem(date, items));
 }
 
+function normalizeFilterQuery(query: string): string {
+  return query.trim();
+}
+
+function filterChangesByName(changes: ChangeInfo[], query: string): ChangeInfo[] {
+  const normalized = normalizeFilterQuery(query).toLowerCase();
+  if (!normalized) {
+    return changes;
+  }
+  return changes.filter(change => change.name.toLowerCase().includes(normalized));
+}
+
 // ── Shared helpers ──
 
 function getChangeChildren(change: ChangeInfo): ChangeTreeItem[] {
@@ -188,6 +213,7 @@ export class ActiveChangesTreeProvider implements vscode.TreeDataProvider<Change
 
   private _workspaceFolders: string[] = [];
   private _groupByDate = false;
+  private _filterQuery = '';
 
   constructor() {
     this.updateWorkspaceFolders();
@@ -196,6 +222,15 @@ export class ActiveChangesTreeProvider implements vscode.TreeDataProvider<Change
   setGroupByDate(value: boolean): void {
     this._groupByDate = value;
     this._onDidChangeTreeData.fire();
+  }
+
+  setFilterQuery(query: string): void {
+    this._filterQuery = normalizeFilterQuery(query);
+    this._onDidChangeTreeData.fire();
+  }
+
+  getFilterQuery(): string {
+    return this._filterQuery;
   }
 
   refresh(): void {
@@ -215,11 +250,13 @@ export class ActiveChangesTreeProvider implements vscode.TreeDataProvider<Change
     if (!element) {
       const roots = findOpenspecRoots(this._workspaceFolders);
       if (roots.length === 0) { return []; }
-      const changes = listChanges(roots[0]);
+      const changes = filterChangesByName(listChanges(roots[0]), this._filterQuery);
       if (this._groupByDate) {
-        return groupChangesByDate(changes);
+        const groups = groupChangesByDate(changes);
+        return this._filterQuery ? [new ActiveFilterItem(this._filterQuery), ...groups] : groups;
       }
-      return changes.map(c => new ChangeItem(c));
+      const items = changes.map(c => new ChangeItem(c));
+      return this._filterQuery ? [new ActiveFilterItem(this._filterQuery), ...items] : items;
     }
     if (element instanceof DateGroupItem) {
       return element.changes.map(c => new ChangeItem(c));

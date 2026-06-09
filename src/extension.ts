@@ -81,6 +81,21 @@ export function activate(context: vscode.ExtensionContext): void {
     vscode.commands.registerCommand('openspec.refreshChanges', () => {
       activeChangesProvider.refresh();
     }),
+    vscode.commands.registerCommand('openspec.searchActiveChanges', async () => {
+      const query = await vscode.window.showInputBox({
+        title: 'Search Active Changes',
+        prompt: 'Enter text to filter active changes by name. Leave empty to clear the filter.',
+        placeHolder: 'Change name',
+        value: activeChangesProvider.getFilterQuery(),
+      });
+      if (query === undefined) {
+        return;
+      }
+      activeChangesProvider.setFilterQuery(query);
+    }),
+    vscode.commands.registerCommand('openspec.clearActiveChangesSearch', () => {
+      activeChangesProvider.setFilterQuery('');
+    }),
     vscode.commands.registerCommand('openspec.refreshArchived', () => {
       archivedChangesProvider.refresh();
     }),
